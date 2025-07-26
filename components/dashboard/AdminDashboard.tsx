@@ -49,7 +49,7 @@ export default function AdminDashboard({ profile }: AdminDashboardProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [recentUsers, setRecentUsers] = useState<Profile[]>([])
-  const [activeTab, setActiveTab] = useState<"overview" | "students" | "relationships">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "students" | "relationships" | "settings">("overview")
 
   // Student Management
   const [students, setStudents] = useState<Profile[]>([])
@@ -438,7 +438,8 @@ export default function AdminDashboard({ profile }: AdminDashboardProps) {
                 >
                   Parent-Student Links
                 </button>
-                <button className="w-full px-6 py-3 rounded-xl glass-card-dark text-white hover:bg-white/10 transition-all duration-300">
+                <button 
+                 className="w-full px-6 py-3 rounded-xl glass-card-dark text-white hover:bg-white/10 transition-all duration-300">
                   System Settings
                 </button>
                 <button className="w-full px-6 py-3 rounded-xl glass-card-dark text-white hover:bg-white/10 transition-all duration-300">

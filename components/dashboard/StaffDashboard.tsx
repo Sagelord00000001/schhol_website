@@ -1,10 +1,11 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAssignments, type Assignment } from "@/hooks/useAssignments"
 import { useSubmissions } from "@/hooks/useSubmissions"
 import { BookOpen, Plus, Edit, Trash2, Users, Calendar, Award, Eye, X, Save } from 'lucide-react'
+import { supabase } from "@/lib/supabase"
 
 type Profile = {
   id: string
@@ -31,6 +32,7 @@ export default function StaffDashboard({ profile }: StaffDashboardProps) {
     profile.id,
   )
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [studentCount, setStudentCount] = useState(0)
   const [editingAssignment, setEditingAssignment] = useState<string | null>(null)
   const [viewingSubmissions, setViewingSubmissions] = useState<string | null>(null)
   const [formData, setFormData] = useState<AssignmentFormData>({
@@ -40,6 +42,17 @@ export default function StaffDashboard({ profile }: StaffDashboardProps) {
     course: "",
     max_points: 100,
   })
+
+    useEffect(() => {
+    const fetchStudentCount = async () => {
+      const { count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "student")
+      if (!error) setStudentCount(count || 0)
+    }
+    fetchStudentCount()
+  }, [])
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -135,7 +148,7 @@ export default function StaffDashboard({ profile }: StaffDashboardProps) {
           <div className="flex items-center justify-between mb-4">
             <Users className="h-8 w-8 text-purple-400" />
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">0</h3>
+          <h3 className="text-2xl font-bold text-white mb-1">{studentCount}</h3>
           <p className="text-white/70">Students</p>
         </div>
       </div>

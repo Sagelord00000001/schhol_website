@@ -35,38 +35,85 @@ export default function ParentDashboard({ profile }: ParentDashboardProps) {
     fetchStudents()
   }, [])
 
-  const fetchStudents = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+//   const fetchStudents = async () => {
+//     try {
+//       setLoading(true)
+//       setError(null)
 
-      const { data, error } = await supabase
-        .from("parent_student_relationships")
-        .select(`
-          student:profiles!parent_student_relationships_student_id_fkey(
-            id,
-            full_name,
-            email
-          )
-        `)
-        .eq("parent_id", profile.id)
+// const { data, error } = await supabase
+//   .from("parent_student_view")
+//   .select(`
+//     student_id,
+//     student_name,
+//     student_email
+//   `)
+//   .eq("parent_id", profile.id)
 
-      if (error) throw error
+//       if (error) throw error
 
-      // Fix the data structure - extract students from the nested array
-      const studentList: Student[] = data?.map((item: any) => item.student).filter(Boolean) || []
-      setStudents(studentList)
+//       // Fix the data structure - extract students from the nested array
+//     //   const studentList: Student[] = data?.map((item: any) => item.student).filter(Boolean) || []
+//     const studentList: Student[] = data?.map((item: any) => ({
+//   id: item.student_id,
+//   full_name: item.student_name,
+//   email: item.student_email,
+// })) || []
+//       setStudents(studentList)
 
-      if (studentList.length > 0 && !selectedStudent) {
-        setSelectedStudent(studentList[0].id)
-      }
-    } catch (err: any) {
-      console.error("Failed to fetch students:", err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
+//       if (studentList.length > 0 && !selectedStudent) {
+//         setSelectedStudent(studentList[0].id)
+//       }
+//     } catch (err: any) {
+//       console.error("Failed to fetch students:", err)
+//       setError(err.message)
+//     } finally {
+//       setLoading(false)
+//     }
+//   }
+
+const fetchStudents = async () => {
+  try {
+    setLoading(true)
+    setError(null)
+
+    console.log("Fetching students for parent ID:", profile.id)
+
+const { data, error } = await supabase
+  .from("parent_student_view")
+  .select("*")
+  .eq("parent_id", profile.id)
+
+
+
+    console.log("Raw fetch result:", { data, error })
+
+    if (error) throw error
+
+    // Transform the data to match the Student type
+
+const studentList = data?.map((item) => ({
+  id: item.student_profile_id,
+  full_name: item.student_name,
+  email: item.student_email,
+})) || []
+
+
+
+    console.log("Transformed student list:", studentList)
+
+    setStudents(studentList)
+
+    if (studentList.length > 0 && !selectedStudent) {
+      setSelectedStudent(studentList[0].id)
     }
+  } catch (err: any) {
+    console.error("Failed to fetch students:", err)
+    setError(err.message)
+  } finally {
+    setLoading(false)
   }
+}
+
 
   if (loading) {
     return (
@@ -118,7 +165,7 @@ export default function ParentDashboard({ profile }: ParentDashboardProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {students.map((student) => (
             <button
-              key={student.id}
+              key={student.id || student.email}
               onClick={() => setSelectedStudent(student.id)}
               className={`p-4 rounded-xl transition-all duration-300 ${
                 selectedStudent === student.id
@@ -128,9 +175,10 @@ export default function ParentDashboard({ profile }: ParentDashboardProps) {
             >
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center">
-                  <span className="text-sm font-bold text-white">
-                    {student.full_name?.charAt(0) || student.email.charAt(0).toUpperCase()}
-                  </span>
+<span className="text-sm font-bold text-white">
+  {student.full_name?.charAt(0)
+    || (typeof student.email === 'string' ? student.email.charAt(0).toUpperCase() : '?')}
+</span>
                 </div>
                 <div className="text-left">
                   <h3 className="text-white font-semibold">{student.full_name || "Unnamed Student"}</h3>
