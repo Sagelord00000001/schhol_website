@@ -171,24 +171,89 @@ export default function AdminDashboard({ profile }: AdminDashboardProps) {
     }
   }
 
-  const fetchRelationships = async () => {
+  // const fetchRelationships = async () => {
+  //   try {
+  //     // const { data, error } = await supabase
+  //     //   .from("parent_student_relationships")
+  //     //   .select(`
+  //     //     *,
+  //     //     parent:profiles!parent_student_relationships_parent_id_fkey(*),
+  //     //     student:profiles!parent_student_relationships_student_id_fkey(*)
+  //     //   `)
+  //     //   .order("created_at", { ascending: false })
+  //     const { data, error } = await supabase
+  // .from("parent_student_relationships")
+  // .select(`
+  //   *,
+  //   parent:profiles!parent_student_relationships_parent_id_fkey(*),
+  //   student:profiles!parent_student_relationships_student_id_fkey(*)
+  // `)
+
+
+  //     if (error) throw error
+
+  //     setRelationships(data || [])
+  //   } catch (err: any) {
+  //     console.error("Failed to fetch relationships:", err)
+  //   }
+  // }
+
+   const fetchRelationships = async () => {
+    setLoading(true)
     try {
-      const { data, error } = await supabase
+      // Step 1: Fetch all relationships
+      const { data: rawRelationships, error: relationshipError } = await supabase
         .from("parent_student_relationships")
-        .select(`
-          *,
-          parent:profiles!parent_student_relationships_parent_id_fkey(*),
-          student:profiles!parent_student_relationships_student_id_fkey(*)
-        `)
-        .order("created_at", { ascending: false })
+        .select("*")
 
-      if (error) throw error
+      if (relationshipError) throw relationshipError
 
-      setRelationships(data || [])
+      if (!rawRelationships || rawRelationships.length === 0) {
+        setRelationships([])
+        setLoading(false)
+        return
+      }
+
+      // Step 2: Get all unique parent and student IDs
+      const parentIds = [...new Set(rawRelationships.map((r) => r.parent_id))]
+      const studentIds = [...new Set(rawRelationships.map((r) => r.student_id))]
+
+      // Step 3: Fetch parent profiles
+      const { data: parentProfiles, error: parentError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, role, avatar_url")
+        .in("id", parentIds)
+
+      if (parentError) throw parentError
+
+      // Step 4: Fetch student profiles
+      const { data: studentProfiles, error: studentError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, role, avatar_url")
+        .in("id", studentIds)
+
+      if (studentError) throw studentError
+
+      // Step 5: Join manually
+      const enriched = rawRelationships.map((r) => {
+        const parent = parentProfiles.find((p) => p.id === r.parent_id)
+        const student = studentProfiles.find((s) => s.id === r.student_id)
+        return {
+          ...r,
+          parent,
+          student,
+        }
+      })
+
+      setRelationships(enriched)
     } catch (err: any) {
-      console.error("Failed to fetch relationships:", err)
+      console.error("Failed to fetch relationships:", err.message)
+      setError("Failed to fetch data.")
+    } finally {
+      setLoading(false)
     }
   }
+
 
   const handleAddRelationship = async () => {
     if (!selectedParent || !selectedStudent) {
@@ -260,7 +325,7 @@ export default function AdminDashboard({ profile }: AdminDashboardProps) {
     <div className="space-y-8">
       {/* Tab Navigation */}
       <div className="morphism-card p-6">
-        <div className="flex space-x-4">
+        <div className="flex flex-col gap-4  md:flex-row md:space-x-2">
           <button
             onClick={() => setActiveTab("overview")}
             className={`px-6 py-3 rounded-xl transition-all duration-300 ${
@@ -388,9 +453,9 @@ export default function AdminDashboard({ profile }: AdminDashboardProps) {
                 ) : (
                   recentUsers.map((user) => (
                     <div key={user.id} className="p-4 rounded-xl glass-card-dark">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center flex-col md:flex-row gap-2 justify-between">
                         <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center">
+                          <div className="md:w-10 w-8 h-8 md:h-10 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center">
                             <span className="text-sm font-bold text-white">
                               {user.full_name?.charAt(0) || user.email.charAt(0).toUpperCase()}
                             </span>
@@ -475,14 +540,14 @@ export default function AdminDashboard({ profile }: AdminDashboardProps) {
               {students.map((student) => (
                 <div key={student.id} className="p-6 rounded-xl glass-card-dark">
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center">
-                      <span className="text-lg font-bold text-white">
+                    <div className="md:w-12 w-8 h-8 md:h-12 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center">
+                      <span className="md:text-lg text-[12px] font-bold text-white">
                         {student.full_name?.charAt(0) || student.email.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white font-semibold">{student.full_name || "Unnamed Student"}</h3>
-                      <p className="text-white/60 text-sm">{student.email}</p>
+                      <h3 className="text-white  font-semibold">{student.full_name || "Unnamed Student"}</h3>
+                      <p className="text-white/60 text-[11px] md:text-sm">{student.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
@@ -503,10 +568,10 @@ export default function AdminDashboard({ profile }: AdminDashboardProps) {
       {activeTab === "relationships" && (
         <div className="space-y-6">
           <div className="morphism-card p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white flex items-center">
+            <div className="flex justify-between gap-3 flex-col items-center mb-6">
+              <h2 className="md:text-2xl text-xl font-bold text-white flex items-center">
                 <UserPlus className="h-6 w-6 mr-2 text-green-400" />
-                Parent-Student Relationships
+                Relationships
               </h2>
               <button onClick={() => setShowAddRelationship(true)} className="btn-web3 px-6 py-3 flex items-center">
                 <Plus className="h-4 w-4 mr-2" />
@@ -579,7 +644,7 @@ export default function AdminDashboard({ profile }: AdminDashboardProps) {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 mx-h-[80vh] overflow-y-auto pr-2">
                 {relationships.map((relationship) => (
                   <div key={relationship.id} className="p-4 rounded-xl glass-card-dark">
                     <div className="flex items-center justify-between">

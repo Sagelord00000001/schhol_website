@@ -108,6 +108,20 @@ export default function Navbar() {
                   Login
                 </Link>
               )}
+                {user ? (
+              <div className="flex gap-2 flex-col space-x-4">
+                <Link href="/dashboard" className="text-white/80 p-3 pb-4 hover:text-cyan-400 transition-colors">
+                  <User className="h-5 w-5 " />
+                </Link>
+                <button onClick={() => signOut()} className="text-white/80  hover:text-red-400 transition-colors">
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </div>
+            ) : (
+              <Link href="/auth" className="btn-web3">
+                <span>Login</span>
+              </Link>
+            )}
             </div>
           </div>
         )}

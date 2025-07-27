@@ -179,7 +179,7 @@ export default function StudentDashboard({ profile }: StudentDashboardProps) {
 
                 return (
                   <div key={assignment.id} className="p-4 rounded-xl glass-card-dark">
-                    <div className="flex justify-between items-start mb-4">
+                    <div className="flex justify-between flex-col md:flex-row gap-2 items-start mb-4">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="text-lg font-bold text-white">{assignment.title}</h3>

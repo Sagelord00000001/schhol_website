@@ -193,23 +193,22 @@ export default function Dashboard() {
     <div className="min-h-screen pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto py-8">
         {/* Header */}
-        <div className="morphism-card p-8 mb-8">
+        <div className="morphism-card p-6 mb-8">
           <div className="flex items-center space-x-6">
             <div className="relative">
               <div
-                className={`w-20 h-20 rounded-full bg-gradient-to-r ${getRoleColor(displayProfile.role)} flex items-center justify-center`}
+                className={`w-10 h-10  md:w-20 md:h-20 rounded-full bg-gradient-to-r ${getRoleColor(displayProfile.role)} flex items-center justify-center`}
               >
                 <span className="text-2xl font-bold text-white">
                   {displayProfile.full_name?.charAt(0) || displayProfile.email.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white"></div>
+              <div className="absolute md:-bottom-1 -bottom-2 md:-right-1 w-4 h-4 md:w-6 md:h-6 bg-green-400 rounded-full border-2 border-white"></div>
             </div>
             <div>
-              <h1 className="text-3xl font-bold gradient-text">Welcome back, {displayProfile.full_name || "User"}!</h1>
+              <h1 className="text-3xl text-[11px] md:text-[20px] font-bold gradient-text">Welcome back, {displayProfile.full_name || "User"}!</h1>
               <p className="text-white/70 text-lg capitalize">{displayProfile.role} Dashboard</p>
               <div className="flex items-center mt-2 space-x-4">
-                <span className="text-sm text-white/60">{displayProfile.email}</span>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${getRoleColor(displayProfile.role)} text-white`}
                 >
